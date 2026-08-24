@@ -3,6 +3,8 @@ import { ShoppingBag, Lock, Unlock } from 'lucide-react';
 
 export default function Header({ isAdminLoggedIn, onLogoutAdmin }) {
   const currentPath = window.location.pathname;
+  const currentHash = window.location.hash;
+  const isAdmin = currentPath === '/admin' || currentHash === '#/admin' || currentHash === '#admin';
 
   return (
     <header className="bg-blue-900 text-white shadow-lg sticky top-0 z-40 border-b-4 border-yellow-400">
@@ -22,7 +24,7 @@ export default function Header({ isAdminLoggedIn, onLogoutAdmin }) {
         </a>
 
         <div className="flex items-center gap-4">
-          {currentPath === '/admin' ? (
+          {isAdmin ? (
             <a
               href="/"
               className="bg-yellow-400 hover:bg-yellow-300 text-blue-950 font-bold px-5 py-3 rounded-xl text-lg shadow-md transition transform active:scale-95 focus:ring-4 focus:ring-yellow-300 border-2 border-yellow-500 flex items-center gap-2"
