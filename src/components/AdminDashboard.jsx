@@ -1,146 +1,101 @@
 import React, { useState } from 'react';
+import ProductForm from './ProductForm';
 import { 
-  db, 
-  storage, 
-  collection, 
-  addDoc, 
-  deleteDoc, 
-  doc, 
-  serverTimestamp, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL,
-  isConfigured 
-} from '../firebase';
-import { 
-  PlusCircle, 
-  Upload, 
-  Trash2, 
+  Package,
+  Layers,
   CheckCircle2, 
-  AlertCircle, 
-  Image as ImageIcon, 
-  Calendar, 
-  FileText, 
-  Heading, 
+  XCircle,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
   X,
-  Tag,
-  ShieldAlert
+  ShieldAlert,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { formatPrice } from '../utils/priceFormatter';
 
-export default function AdminDashboard({ user, posts = [], onAddPostDemo, onDeletePostDemo, onClose }) {
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [category, setCategory] = useState('Announcement');
-  const [description, setDescription] = useState('');
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-
+export default function AdminDashboard({
+  user,
+  products = [],
+  onAddProduct,
+  onUpdateProduct,
+  onDeleteProduct,
+  onToggleStock,
+  onClose
+}) {
+  const [activeTab, setActiveTab] = useState('list'); // 'list' | 'add' | 'edit'
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [feedback, setFeedback] = useState({ type: '', message: '' });
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setMessage({ type: 'error', text: 'Image file size must be less than 5MB.' });
-        return;
-      }
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // Delete modal state
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
-    setMessage({ type: '', text: '' });
+  // Calculated Stats
+  const totalProducts = products.length;
+  const categoriesList = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));
+  const brandsList = Array.from(new Set(products.map((p) => p.brand).filter(Boolean)));
+  const totalCategories = categoriesList.length;
+  const totalBrands = brandsList.length;
+  const inStockCount = products.filter((p) => p.in_stock !== false && p.inStock !== false).length;
+  const outOfStockCount = totalProducts - inStockCount;
 
-    if (!title || !date || !description) {
-      setMessage({ type: 'error', text: 'Please complete all required fields.' });
-      return;
-    }
+  // Filtered Products
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
+  const handleCreateSubmit = async (productData, imageFile) => {
     setLoading(true);
-
+    setFeedback({ type: '', message: '' });
     try {
-      let imageUrl = '';
-
-      if (isConfigured) {
-        // Upload image to Firebase Storage if provided
-        if (imageFile) {
-          const fileExtension = imageFile.name.split('.').pop();
-          const fileName = `posts/${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
-          const storageRef = ref(storage, fileName);
-          
-          const uploadSnapshot = await uploadBytes(storageRef, imageFile);
-          imageUrl = await getDownloadURL(uploadSnapshot.ref);
-        }
-
-        // Save post data to Firestore posts collection
-        const newPost = {
-          title,
-          date,
-          category,
-          description,
-          imageUrl: imageUrl || null,
-          createdAt: serverTimestamp(),
-          authorEmail: user?.email || 'admin'
-        };
-
-        await addDoc(collection(db, 'posts'), newPost);
-      } else {
-        // Local/Demo Mode execution
-        imageUrl = imagePreview || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80';
-        
-        const demoPost = {
-          id: 'post-' + Date.now(),
-          title,
-          date,
-          category,
-          description,
-          imageUrl,
-          createdAt: new Date().toISOString()
-        };
-
-        if (onAddPostDemo) {
-          onAddPostDemo(demoPost);
-        }
-      }
-
-      setMessage({ type: 'success', text: 'Post successfully created and published!' });
-      
-      // Reset form
-      setTitle('');
-      setDate(new Date().toISOString().split('T')[0]);
-      setCategory('Announcement');
-      setDescription('');
-      setImageFile(null);
-      setImagePreview(null);
-
+      await onAddProduct(productData, imageFile);
+      setFeedback({ type: 'success', message: 'Product created successfully!' });
+      setActiveTab('list');
     } catch (err) {
-      console.error("Error creating post:", err);
-      setMessage({ type: 'error', text: `Failed to create post: ${err.message}` });
+      setFeedback({ type: 'error', message: err.message || 'Failed to create product.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
-
+  const handleEditSubmit = async (productData, imageFile) => {
+    if (!editingProduct) return;
+    setLoading(true);
+    setFeedback({ type: '', message: '' });
     try {
-      if (isConfigured) {
-        await deleteDoc(doc(db, 'posts', postId));
-      } else if (onDeletePostDemo) {
-        onDeletePostDemo(postId);
-      }
-      setMessage({ type: 'success', text: 'Post deleted successfully.' });
+      await onUpdateProduct(editingProduct.id, productData, imageFile);
+      setFeedback({ type: 'success', message: 'Product updated successfully!' });
+      setEditingProduct(null);
+      setActiveTab('list');
     } catch (err) {
-      console.error("Error deleting post:", err);
-      setMessage({ type: 'error', text: 'Failed to delete post: ' + err.message });
+      setFeedback({ type: 'error', message: err.message || 'Failed to update product.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    const prodToDelete = products.find((p) => p.id === deleteConfirmId);
+    setLoading(true);
+    try {
+      await onDeleteProduct(deleteConfirmId, prodToDelete?.image_url);
+      setFeedback({ type: 'success', message: 'Product deleted successfully.' });
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message || 'Failed to delete product.' });
+    } finally {
+      setDeleteConfirmId(null);
+      setLoading(false);
     }
   };
 
@@ -148,180 +103,273 @@ export default function AdminDashboard({ user, posts = [], onAddPostDemo, onDele
     <div className="admin-dashboard-container">
       <div className="dashboard-header">
         <div>
-          <h2>Admin Dashboard</h2>
+          <h2>Smart Catalog Admin Dashboard</h2>
           <p className="dashboard-welcome">
             Logged in as <span className="highlight-user">{user?.email || 'Admin'}</span>
           </p>
         </div>
         <button onClick={onClose} className="btn btn-outline btn-sm">
-          <X size={18} />
-          <span>Close Dashboard</span>
+          <X size={18} /> Close Dashboard
         </button>
       </div>
 
-      {!isConfigured && (
+      {!isSupabaseConfigured && (
         <div className="demo-notice banner-info">
           <ShieldAlert size={18} />
           <div>
-            <strong>Firestore & Storage Notice:</strong> Placeholders detected in <code>firebaseConfig</code>. Creating posts will update the local feed in demo mode. Configure your Firebase project in <code>src/firebase.js</code> to persist data live in Firestore and Firebase Storage.
+            <strong>Demo Storage & Database:</strong> Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> in <code>.env</code> to persist directly to Supabase table & bucket. Currently running local demo mode.
           </div>
         </div>
       )}
 
-      {message.text && (
-        <div className={`alert-banner alert-${message.type}`}>
-          {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          <span>{message.text}</span>
+      {feedback.message && (
+        <div className={`alert-banner alert-${feedback.type}`}>
+          {feedback.type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+          <span>{feedback.message}</span>
         </div>
       )}
 
-      <div className="dashboard-grid">
-        {/* Post Creation Form */}
-        <div className="dashboard-card form-card">
-          <div className="card-header">
-            <PlusCircle className="card-icon" size={20} />
-            <h3>Create New Post</h3>
+      {/* Overview Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-overview-card">
+          <Package className="stat-overview-icon" size={24} />
+          <div className="stat-overview-info">
+            <span className="stat-overview-value">{totalProducts}</span>
+            <span className="stat-overview-label">Total Products</span>
           </div>
+        </div>
 
-          <form onSubmit={handleCreatePost} className="post-form">
-            <div className="form-group">
-              <label htmlFor="post-title">
-                <Heading size={16} /> Title *
-              </label>
-              <input
-                id="post-title"
-                type="text"
-                placeholder="e.g., Spring Hackathon 2025 Kickoff"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
+        <div className="stat-overview-card">
+          <Layers className="stat-overview-icon" size={24} />
+          <div className="stat-overview-info">
+            <span className="stat-overview-value">{totalCategories}</span>
+            <span className="stat-overview-label">Categories</span>
+          </div>
+        </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="post-date">
-                  <Calendar size={16} /> Event Date *
-                </label>
+        <div className="stat-overview-card">
+          <Layers className="stat-overview-icon" size={24} />
+          <div className="stat-overview-info">
+            <span className="stat-overview-value">{totalBrands}</span>
+            <span className="stat-overview-label">Brands</span>
+          </div>
+        </div>
+
+        <div className="stat-overview-card success-stat">
+          <CheckCircle2 className="stat-overview-icon" size={24} />
+          <div className="stat-overview-info">
+            <span className="stat-overview-value">{inStockCount}</span>
+            <span className="stat-overview-label">In Stock</span>
+          </div>
+        </div>
+
+        <div className="stat-overview-card warning-stat">
+          <XCircle className="stat-overview-icon" size={24} />
+          <div className="stat-overview-info">
+            <span className="stat-overview-value">{outOfStockCount}</span>
+            <span className="stat-overview-label">Out of Stock</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dashboard Sub-Header & Controls */}
+      <div className="dashboard-nav-bar">
+        <div className="nav-tabs">
+          <button
+            className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('list'); setEditingProduct(null); }}
+          >
+            All Products
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('add'); setEditingProduct(null); }}
+          >
+            <Plus size={16} /> Add New Product
+          </button>
+          {activeTab === 'edit' && (
+            <button className="tab-btn active">
+              <Edit size={16} /> Edit Product
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Tab Content */}
+      <div className="dashboard-content">
+        {activeTab === 'add' && (
+          <div className="dashboard-card">
+            <h3>Add New Product</h3>
+            <ProductForm
+              onSubmit={handleCreateSubmit}
+              onCancel={() => setActiveTab('list')}
+              loading={loading}
+            />
+          </div>
+        )}
+
+        {activeTab === 'edit' && editingProduct && (
+          <div className="dashboard-card">
+            <h3>Edit Product: {editingProduct.name}</h3>
+            <ProductForm
+              initialProduct={editingProduct}
+              onSubmit={handleEditSubmit}
+              onCancel={() => { setEditingProduct(null); setActiveTab('list'); }}
+              loading={loading}
+            />
+          </div>
+        )}
+
+        {activeTab === 'list' && (
+          <div className="dashboard-card">
+            <div className="admin-table-filters">
+              <div className="search-input-wrapper">
+                <Search size={16} />
                 <input
-                  id="post-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  required
+                  type="text"
+                  placeholder="Filter by name or brand..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="post-category">
-                  <Tag size={16} /> Category
-                </label>
-                <select 
-                  id="post-category"
-                  value={category} 
-                  onChange={(e) => setCategory(e.target.value)}
+              <div className="category-filter-wrapper">
+                <Filter size={16} />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
                 >
-                  <option value="Announcement">Announcement</option>
-                  <option value="Workshop">Workshop</option>
-                  <option value="Hackathon">Hackathon</option>
-                  <option value="Meetup">Meetup</option>
+                  <option value="All">All Categories</option>
+                  {categoriesList.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="post-description">
-                <FileText size={16} /> Description / Content *
-              </label>
-              <textarea
-                id="post-description"
-                rows="4"
-                placeholder="Write the details of the event or news..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              ></textarea>
-            </div>
-
-            <div className="form-group">
-              <label>
-                <ImageIcon size={16} /> Event Image (Firebase Storage)
-              </label>
-              <div className="file-upload-wrapper">
-                <input
-                  type="file"
-                  id="post-image"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="file-input-hidden"
-                />
-                <label htmlFor="post-image" className="file-upload-label">
-                  <Upload size={20} />
-                  <span>{imageFile ? imageFile.name : "Choose an image file..."}</span>
-                </label>
-              </div>
-
-              {imagePreview && (
-                <div className="image-preview-container">
-                  <img src={imagePreview} alt="Preview" className="image-preview" />
-                  <button 
-                    type="button" 
-                    onClick={() => { setImageFile(null); setImagePreview(null); }}
-                    className="remove-preview-btn"
-                  >
-                    <X size={14} /> Remove Image
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full"
-              disabled={loading}
-            >
-              {loading ? 'Publishing to Firestore...' : 'Publish Announcement'}
-            </button>
-          </form>
-        </div>
-
-        {/* Existing Posts Management */}
-        <div className="dashboard-card posts-list-card">
-          <div className="card-header">
-            <FileText className="card-icon" size={20} />
-            <h3>Manage Published Posts ({posts.length})</h3>
-          </div>
-
-          <div className="posts-manage-list">
-            {posts.length === 0 ? (
-              <p className="no-posts-text">No posts published yet.</p>
-            ) : (
-              posts.map((post) => (
-                <div key={post.id} className="manage-post-item">
-                  {post.imageUrl ? (
-                    <img src={post.imageUrl} alt={post.title} className="manage-post-thumb" />
+            <div className="table-responsive">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                    <th>Stock Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-4">
+                        No products found matching filters.
+                      </td>
+                    </tr>
                   ) : (
-                    <div className="manage-post-thumb placeholder">
-                      <ImageIcon size={20} />
-                    </div>
+                    filteredProducts.map((p) => {
+                      const img = p.image_url || p.image || p.imageUrl;
+                      const inStk = p.in_stock !== undefined ? p.in_stock : (p.inStock ?? true);
+
+                      return (
+                        <tr key={p.id}>
+                          <td>
+                            <div className="table-product-cell">
+                              <img src={img} alt={p.name} className="table-thumb" />
+                              <div className="cell-info">
+                                <span className="cell-title">{p.name}</span>
+                                {p.tag && <span className="cell-tag">{p.tag}</span>}
+                              </div>
+                            </div>
+                          </td>
+                          <td>{p.category || '-'}</td>
+                          <td>{p.brand || '-'}</td>
+                          <td>{formatPrice(p.price, p.currency)}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className={`stock-toggle-btn ${inStk ? 'in-stock' : 'out-stock'}`}
+                              onClick={() => onToggleStock(p.id, inStk)}
+                              title="Click to toggle stock status"
+                            >
+                              {inStk ? (
+                                <>
+                                  <ToggleRight size={20} /> In Stock
+                                </>
+                              ) : (
+                                <>
+                                  <ToggleLeft size={20} /> Out of Stock
+                                </>
+                              )}
+                            </button>
+                          </td>
+                          <td>
+                            <div className="table-actions">
+                              <button
+                                type="button"
+                                className="action-btn edit-btn"
+                                onClick={() => {
+                                  setEditingProduct(p);
+                                  setActiveTab('edit');
+                                }}
+                                title="Edit product"
+                              >
+                                <Edit size={16} />
+                              </button>
+                              <button
+                                type="button"
+                                className="action-btn delete-btn"
+                                onClick={() => setDeleteConfirmId(p.id)}
+                                title="Delete product"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
-                  <div className="manage-post-info">
-                    <h4 className="manage-post-title">{post.title}</h4>
-                    <span className="manage-post-date">{post.date}</span>
-                  </div>
-                  <button
-                    onClick={() => handleDeletePost(post.id)}
-                    className="btn-delete"
-                    title="Delete Post"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))
-            )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
+          <div className="modal-card confirmation-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Confirm Deletion</h3>
+              <button onClick={() => setDeleteConfirmId(null)} className="modal-close-btn">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete this product? This action cannot be undone.</p>
+              <div className="modal-actions">
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setDeleteConfirmId(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={confirmDelete}
+                  disabled={loading}
+                >
+                  {loading ? 'Deleting...' : 'Yes, Delete'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
