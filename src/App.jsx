@@ -1,146 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import AnnouncementsFeed from './components/AnnouncementsFeed';
-import Footer from './components/Footer';
+import SearchBar from './components/SearchBar';
+import FilterBar from './components/FilterBar';
+import ProductGrid from './components/ProductGrid';
+import SelectionPanel from './components/SelectionPanel';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
-import { 
-  auth, 
-  db, 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  onAuthStateChanged, 
-  firebaseSignOut,
-  isConfigured 
-} from './firebase';
+import Footer from './components/Footer';
+
+import { useProducts } from './hooks/useProducts';
+import { useAuth } from './hooks/useAuth';
+import { useSelection } from './hooks/useSelection';
+
 import './App.css';
 
-// Initial sample posts used if Firebase config is unconfigured placeholder
-const INITIAL_DEMO_POSTS = [
-  {
-    id: 'demo-1',
-    title: 'Spring Hackathon 2025: Code for Good',
-    date: '2025-04-15',
-    category: 'Hackathon',
-    description: 'Join us for 48 hours of collaborative coding, mentorship, and building solutions for local non-profit organizations. Cash prizes and swag for top teams!',
-    imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80',
-    createdAt: '2025-03-01'
-  },
-  {
-    id: 'demo-2',
-    title: 'Mastering Full-Stack React & Node.js',
-    date: '2025-03-28',
-    category: 'Workshop',
-    description: 'An interactive hands-on workshop covering modern frontend architectures, API design, RESTful endpoints, and backend integration. Bring your laptops!',
-    imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80',
-    createdAt: '2025-02-20'
-  },
-  {
-    id: 'demo-3',
-    title: 'Weekly Tech Talk: AI Agents in 2025',
-    date: '2025-03-20',
-    category: 'Meetup',
-    description: 'Explore state-of-the-art autonomous agents, LLM tool integration, and practical software automation techniques with guest speaker Sarah Lin.',
-    imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
-    createdAt: '2025-02-15'
-  }
-];
-
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, loginWithEmail, logout } = useAuth();
+  const {
+    products,
+    loading: productsLoading,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    toggleStock
+  } = useProducts();
+
+  const {
+    selectedItems,
+    addItem,
+    updateQuantity,
+    updateColor,
+    removeItem,
+    clearSelection,
+    totalItemCount
+  } = useSelection();
+
+  // Navigation & UI States
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
 
-  // Authentication State Observer
-  useEffect(() => {
-    if (!isConfigured) return;
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedBrand, setSelectedBrand] = useState('All');
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+  // Dynamic filter values derived from products data
+  const categories = useMemo(() => {
+    const set = new Set(products.map((p) => p.category).filter(Boolean));
+    return Array.from(set);
+  }, [products]);
+
+  const brands = useMemo(() => {
+    const set = new Set(products.map((p) => p.brand).filter(Boolean));
+    return Array.from(set);
+  }, [products]);
+
+  // Filtered products list for public dashboard
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.brand && product.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (product.note && product.note.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+      const matchesBrand = selectedBrand === 'All' || product.brand === selectedBrand;
+
+      return matchesSearch && matchesCategory && matchesBrand;
     });
+  }, [products, searchQuery, selectedCategory, selectedBrand]);
 
-    return () => unsubscribe();
-  }, []);
-
-  // Fetch Firestore Posts Real-Time Stream
-  useEffect(() => {
-    if (!isConfigured) {
-      // Use local demo posts if Firebase credentials are placeholders
-      const savedDemoPosts = localStorage.getItem('demo_posts');
-      if (savedDemoPosts) {
-        try {
-          setPosts(JSON.parse(savedDemoPosts));
-        } catch {
-          setPosts(INITIAL_DEMO_POSTS);
-        }
-      } else {
-        setPosts(INITIAL_DEMO_POSTS);
-      }
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-
-    const unsubscribe = onSnapshot(
-      postsQuery, 
-      (snapshot) => {
-        const postsData = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data()
-        }));
-        setPosts(postsData);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Firestore stream error:", error);
-        setPosts(INITIAL_DEMO_POSTS);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    if (isConfigured) {
-      try {
-        await firebaseSignOut(auth);
-      } catch (err) {
-        console.error("Sign out error:", err);
-      }
-    }
-    setUser(null);
-    setShowDashboard(false);
-  };
-
-  const handleDemoLogin = (demoUser) => {
-    setUser(demoUser);
+  const handleAdminLoginSubmit = async (email, password) => {
+    await loginWithEmail(email, password);
     setShowDashboard(true);
   };
 
-  const handleAddPostDemo = (newPost) => {
-    const updated = [newPost, ...posts];
-    setPosts(updated);
-    localStorage.setItem('demo_posts', JSON.stringify(updated));
-  };
-
-  const handleDeletePostDemo = (postId) => {
-    const updated = posts.filter((p) => p.id !== postId);
-    setPosts(updated);
-    localStorage.setItem('demo_posts', JSON.stringify(updated));
+  const handleLogout = async () => {
+    await logout();
+    setShowDashboard(false);
   };
 
   return (
     <div className="app-layout">
-      <Navbar 
-        user={user} 
+      <Navbar
+        user={user}
+        selectionCount={totalItemCount}
+        onOpenSelection={() => setIsSelectionOpen(true)}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
         onOpenDashboard={() => setShowDashboard(true)}
         onLogout={handleLogout}
@@ -148,58 +94,77 @@ export default function App() {
 
       {showDashboard && user ? (
         <main className="main-content dashboard-view">
-          <AdminDashboard 
+          <AdminDashboard
             user={user}
-            posts={posts}
-            onAddPostDemo={handleAddPostDemo}
-            onDeletePostDemo={handleDeletePostDemo}
+            products={products}
+            onAddProduct={addProduct}
+            onUpdateProduct={updateProduct}
+            onDeleteProduct={deleteProduct}
+            onToggleStock={toggleStock}
             onClose={() => setShowDashboard(false)}
           />
         </main>
       ) : (
         <main className="main-content">
           <Hero />
-          
-          <AnnouncementsFeed 
-            posts={posts} 
-            loading={loading}
-            isDemoMode={!isConfigured} 
-          />
 
-          <section id="about" className="about-section">
+          <section id="catalog" className="catalog-section">
             <div className="section-container">
-              <div className="about-card">
-                <h2>About DevClub</h2>
-                <p>
-                  We are a student-led developer community dedicated to fostering innovation, open-source collaboration, and technology skills. Whether you are writing your first line of code or scaling distributed systems, there is a place for you in our club!
+              <div className="section-header">
+                <h2 className="section-title">Product Catalog</h2>
+                <p className="section-subtitle">
+                  Browse items, explore color variants, and build your custom selection list.
                 </p>
-                <div className="about-tags">
-                  <span className="tag">#WebDev</span>
-                  <span className="tag">#OpenSource</span>
-                  <span className="tag">#AI_ML</span>
-                  <span className="tag">#CyberSecurity</span>
-                  <span className="tag">#CloudComputing</span>
-                </div>
               </div>
+
+              <div className="catalog-controls">
+                <SearchBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                />
+
+                <FilterBar
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  brands={brands}
+                  selectedBrand={selectedBrand}
+                  setSelectedBrand={setSelectedBrand}
+                />
+              </div>
+
+              <ProductGrid
+                products={filteredProducts}
+                loading={productsLoading}
+                onSelectProduct={addItem}
+              />
             </div>
           </section>
         </main>
       )}
 
-      <Footer 
+      {/* Product Selection Drawer/Panel */}
+      <SelectionPanel
+        selectedItems={selectedItems}
+        onUpdateQuantity={updateQuantity}
+        onUpdateColor={updateColor}
+        onRemove={removeItem}
+        onClear={clearSelection}
+        isOpen={isSelectionOpen}
+        onClose={() => setIsSelectionOpen(false)}
+      />
+
+      {/* Admin Authentication Modal */}
+      <AdminLogin
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onLogin={handleAdminLoginSubmit}
+      />
+
+      <Footer
         user={user}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
         onOpenDashboard={() => setShowDashboard(true)}
-      />
-
-      <AdminLogin 
-        isOpen={isAdminModalOpen} 
-        onClose={() => setIsAdminModalOpen(false)}
-        onLoginSuccess={(loggedInUser) => {
-          setUser(loggedInUser);
-          setShowDashboard(true);
-        }}
-        onDemoLogin={handleDemoLogin}
       />
     </div>
   );
