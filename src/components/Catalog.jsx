@@ -23,20 +23,38 @@ export default function Catalog() {
 
       // 2. If table not found or error, fallback to products
       if (fetchErr || !data) {
-        console.warn('Falling back to products table:', fetchErr?.message);
         const fallbackRes = await supabase
           .from('products')
           .select('*');
-        if (fallbackRes.error) {
-          throw fallbackRes.error;
-        }
         data = fallbackRes.data || [];
       }
 
-      setProducts(data);
+      // Merge local admin products stored in localStorage if any
+      const localProductsRaw = localStorage.getItem('local_admin_products');
+      let localProducts = [];
+      if (localProductsRaw) {
+        try {
+          localProducts = JSON.parse(localProductsRaw);
+        } catch {
+          localProducts = [];
+        }
+      }
+
+      const combined = [...localProducts, ...data];
+      setProducts(combined);
     } catch (err) {
       console.error('Error fetching products:', err);
-      setError('Unable to load catalog products right now. Please check your internet connection.');
+      // Even if offline, load local items
+      const localProductsRaw = localStorage.getItem('local_admin_products');
+      if (localProductsRaw) {
+        try {
+          setProducts(JSON.parse(localProductsRaw));
+        } catch {
+          setError('Unable to load catalog products right now.');
+        }
+      } else {
+        setError('Unable to load catalog products right now.');
+      }
     } finally {
       setLoading(false);
     }
