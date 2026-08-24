@@ -108,7 +108,7 @@ export default function AdminRoute() {
     reader.readAsDataURL(file);
   };
 
-  // Save new item locally if database insert is blocked by RLS
+  // Save new item locally if database insert fails
   const saveLocalProduct = (productData) => {
     const existingRaw = localStorage.getItem('local_admin_products');
     let existing = [];
@@ -119,12 +119,7 @@ export default function AdminRoute() {
         existing = [];
       }
     }
-    const newLocalItem = {
-      ...productData,
-      id: `local-${Date.now()}`,
-      created_at: new Date().toISOString()
-    };
-    const updated = [newLocalItem, ...existing];
+    const updated = [productData, ...existing];
     localStorage.setItem('local_admin_products', JSON.stringify(updated));
   };
 
@@ -157,7 +152,7 @@ export default function AdminRoute() {
           });
 
         if (uploadError) {
-          console.warn('Storage upload error (fallback to local preview):', uploadError.message);
+          console.warn('Storage upload restricted by bucket RLS policies, using preview image:', uploadError.message);
           uploadedImageUrl = previewUrl || '';
         } else {
           // Retrieve Public URL
@@ -174,8 +169,12 @@ export default function AdminRoute() {
         ? colorsInput.split(',').map((c) => c.trim()).filter(Boolean)
         : [];
 
+      // Generate unique text ID for Supabase products table (since column ID has no auto-increment default)
+      const uniqueId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
       // Valid Database Payload Object matching schema columns
       const newProductData = {
+        id: uniqueId,
         name: name.trim(),
         price: price ? parseFloat(price) : null,
         currency: currency || '$',
@@ -199,11 +198,11 @@ export default function AdminRoute() {
         if (!res2.error) {
           dbSaved = true;
         } else {
-          console.warn('Database insertion skipped or RLS restricted:', res2.error.message);
+          console.warn('Database insertion error:', res2.error.message);
         }
       }
 
-      // If DB insert is restricted by policies, store in local catalog store
+      // If DB insert failed, store in local catalog store
       if (!dbSaved) {
         saveLocalProduct(newProductData);
       }
@@ -228,7 +227,9 @@ export default function AdminRoute() {
     } catch (err) {
       console.error('Submission error:', err);
       // Fallback local save to ensure user experience never breaks
+      const uniqueId = `prod_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       saveLocalProduct({
+        id: uniqueId,
         name: name.trim(),
         price: price ? parseFloat(price) : null,
         currency: currency || '$',
