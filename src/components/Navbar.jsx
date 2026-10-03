@@ -1,21 +1,51 @@
 import React from 'react';
-import { Code2, Shield, LogOut } from 'lucide-react';
+import { Shield, LogOut, Calendar } from 'lucide-react';
 
-export default function Navbar({ user, onOpenAdminModal, onOpenDashboard, onLogout }) {
+export default function Navbar({ user, onOpenAdminModal, onOpenDashboard, onLogout, onNavigate }) {
+  const handleNavClick = (path, e) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(path);
+    }
+  };
+
   return (
     <header className="navbar-header">
       <div className="navbar-container">
-        <div className="navbar-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="brand-icon">
-            <Code2 size={24} />
-          </div>
-          <span className="brand-name">DevClub<span className="brand-dot">.</span></span>
-        </div>
+        <a
+          href="/"
+          onClick={(e) => handleNavClick('/', e)}
+          className="navbar-brand"
+        >
+          <img
+            src="/images/logo.png"
+            alt="WYTU Logo"
+            className="w-8 h-8 object-contain rounded bg-white p-0.5 border border-yellow-400"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+          <span className="brand-name">WYTU<span className="brand-dot">.</span></span>
+        </a>
 
         <nav className="navbar-nav">
-          <a href="#announcements" className="nav-link">Announcements</a>
-          <a href="#about" className="nav-link">About Us</a>
-          
+          <a
+            href="/"
+            onClick={(e) => handleNavClick('/', e)}
+            className="nav-link"
+          >
+            Catalog
+          </a>
+
+          <a
+            href="/events"
+            onClick={(e) => handleNavClick('/events', e)}
+            className="nav-link flex items-center gap-1"
+          >
+            <Calendar size={16} />
+            <span>Events</span>
+          </a>
+
           {user ? (
             <div className="user-controls">
               <button onClick={onOpenDashboard} className="btn btn-secondary btn-sm">
