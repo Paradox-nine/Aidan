@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2, Lock, Heart } from 'lucide-react';
+import { Code2, Lock } from 'lucide-react';
 
 export default function Footer({ onOpenAdminModal, user, onOpenDashboard }) {
   return (
