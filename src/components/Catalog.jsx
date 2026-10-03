@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
 import Header from './Header';
+import Footer from './Footer';
 import { Search, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 
-export default function Catalog() {
+export default function Catalog({ onNavigate }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,7 +69,7 @@ export default function Catalog() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-900">
-      <Header />
+      <Header onNavigate={onNavigate} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Banner Section */}
@@ -202,14 +203,7 @@ export default function Catalog() {
         </section>
       </main>
 
-      <footer className="bg-slate-900 text-white py-8 border-t-4 border-yellow-400 mt-12 text-center">
-        <div className="max-w-7xl mx-auto px-4 space-y-2">
-          <p className="text-2xl font-black text-yellow-300">Smart Cataloged</p>
-          <p className="text-lg text-slate-300">
-            Accessible, Easy-to-read Product Showcase &amp; Management
-          </p>
-        </div>
-      </footer>
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 }
