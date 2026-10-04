@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - WYTU</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- Admin Top Header -->
+  <header class="admin-header">
+    <div class="admin-brand">
+      <img src="../images/logo.png" alt="WYTU Logo">
+      <span>WYTU Admin Management</span>
+    </div>
+    <div class="admin-user-menu">
+      <div class="admin-user-info">
+        <span> Logged in as:</span>
+        <span class="admin-user-name">Administrator</span>
+      </div>
+      <button type="button" class="btn-admin-logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="admin-wrapper">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+      <a href="index.html" class="admin-nav-item active"> Dashboard</a>
+      <a href="events.html" class="admin-nav-item"> Manage Events</a>
+      <a href="create-event.html" class="admin-nav-item"> Create Event</a>
+      <a href="../index.html" class="admin-nav-item" target="_blank"> View Website &rarr;</a>
+    </aside>
+
+    <!-- Admin Main Content -->
+    <main class="admin-main">
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Dashboard</h1>
+          <p class="admin-page-subtitle">Overview of university announcement events and status.</p>
+        </div>
+        <a href="create-event.html" class="btn btn-primary">+ Create New Event</a>
+      </div>
+
+      <!-- Stat Cards -->
+      <div id="admin-dashboard-stats" class="admin-stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-icon stat-icon-blue"></div>
+          <div>
+            <div id="stat-total-events" class="stat-card-num">0</div>
+            <div class="stat-card-label">Total Events</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-icon stat-icon-green"></div>
+          <div>
+            <div id="stat-published-events" class="stat-card-num">0</div>
+            <div class="stat-card-label">Published</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-icon stat-icon-yellow"></div>
+          <div>
+            <div id="stat-draft-events" class="stat-card-num">0</div>
+            <div class="stat-card-label">Drafts</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-icon stat-icon-purple"></div>
+          <div>
+            <div class="stat-card-num">15</div>
+            <div class="stat-card-label">Departments</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Events Table -->
+      <div class="admin-card">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--navy);">Recent Event Announcements</h3>
+          <a href="events.html" class="btn btn-outline btn-sm">Manage All Events &rarr;</a>
+        </div>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Thumbnail</th>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-recent-events-body">
+              <!-- Rendered by js/admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../data/events.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

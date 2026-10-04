@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Departments - West Yangon Technological University (WYTU)</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/departments.css">
+</head>
+<body>
+
+
+
+  <!-- Global Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="../index.html" class="brand">
+        <img src="../images/logo.png" alt="WYTU Logo" class="brand-logo">
+        <div class="brand-text">
+          <span class="brand-title">West Yangon Technological University</span>
+        </div>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="../index.html" class="nav-link">Home</a>
+        <a href="../about.html" class="nav-link">About</a>
+
+        <div class="nav-item dropdown">
+          <a href="index.html" class="nav-link active">
+            Departments <span style="font-size:0.75rem;">▼</span>
+          </a>
+          <div class="dropdown-menu">
+            <div>
+              <div class="dropdown-header">Core Engineering Majors</div>
+              <div class="dropdown-list">
+                <a href="civil.html" class="dropdown-item">Civil Engineering</a>
+                <a href="architecture.html" class="dropdown-item">Architecture</a>
+                <a href="ceit.html" class="dropdown-item">Computer Eng. & IT (CEIT)</a>
+                <a href="electrical-power.html" class="dropdown-item">Electrical Power Engineering</a>
+                <a href="electrical-communication.html" class="dropdown-item">Electrical & Comm. Eng.</a>
+                <a href="mechatronics.html" class="dropdown-item">Mechatronics Engineering</a>
+                <a href="chemical.html" class="dropdown-item">Chemical Engineering</a>
+                <a href="metallurgical.html" class="dropdown-item">Metallurgical & Material Sci.</a>
+                <a href="textile.html" class="dropdown-item">Textile Engineering</a>
+                <a href="agricultural.html" class="dropdown-item">Agricultural Engineering</a>
+              </div>
+            </div>
+            <div>
+              <div class="dropdown-header">Supportive Departments</div>
+              <div class="dropdown-list">
+                <a href="mathematics.html" class="dropdown-item">Engineering Mathematics</a>
+                <a href="english.html" class="dropdown-item">English</a>
+                <a href="physics.html" class="dropdown-item">Engineering Physics</a>
+                <a href="chemistry.html" class="dropdown-item">Engineering Chemistry</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="../admissions.html" class="nav-link">Admissions</a>
+        <a href="../programs.html" class="nav-link">Programs</a>
+        <a href="../scholarships.html" class="nav-link">Scholarships</a>
+        <a href="../research.html" class="nav-link">Research</a>
+        <a href="../events/index.html" class="nav-link">Events</a>
+        <a href="../contact.html" class="nav-link">Contact</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="btn-search-trigger" aria-label="Search website">
+           <span>Search</span>
+        </button>
+        <button type="button" class="hamburger" aria-label="Toggle navigation menu">
+
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-wrap">
+    <div class="container breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb-separator">&rsaquo;</span>
+      <span class="breadcrumb-current">Departments</span>
+    </div>
+  </div>
+
+  <main>
+    <!-- Page Hero -->
+    <section class="page-hero">
+      <div class="container">
+        <h1 class="page-hero-title">Academic Departments</h1>
+        <p class="page-hero-subtitle">
+          Discover our 11 core engineering major departments and 4 supportive academic departments driving educational excellence at WYTU.
+        </p>
+      </div>
+    </section>
+
+    <!-- Departments Listing Section -->
+    <section class="section">
+      <div class="container">
+        <!-- Filter Bar -->
+        <div class="dept-filter-bar">
+          <button type="button" class="dept-filter-btn active" data-filter="all">All Departments (15)</button>
+          <button type="button" class="dept-filter-btn" data-filter="core">Core Engineering Majors (11)</button>
+          <button type="button" class="dept-filter-btn" data-filter="supportive">Supportive Academic Departments (4)</button>
+        </div>
+
+        <div id="departments-grid-container">
+          <!-- Populated by js/departments.js using data/departments.js -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo-group">
+          <img src="../images/logo.png" alt="WYTU Logo" class="footer-logo">
+          <div>
+            <div class="footer-brand-title">West Yangon Technological University</div>
+            <div class="footer-brand-sub">Engineering • Technology • Innovation</div>
+          </div>
+        </div>
+        <p class="footer-desc">
+          West Yangon Technological University is a premier higher engineering institution committed to academic excellence, innovation, and technological development in Myanmar.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Quick Links</h4>
+        <div class="footer-links">
+          <a href="../index.html">Home</a>
+          <a href="../about.html">About WYTU</a>
+          <a href="index.html">Departments</a>
+          <a href="../admissions.html">Admissions</a>
+          <a href="../programs.html">Programs</a>
+          <a href="../scholarships.html">Scholarships</a>
+          <a href="../research.html">Research</a>
+          <a href="../events/index.html">Events</a>
+          <a href="../contact.html">Contact</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Departments</h4>
+        <div class="footer-links">
+          <a href="civil.html">Civil Engineering</a>
+          <a href="ceit.html">CEIT Department</a>
+          <a href="electrical-power.html">Electrical Power</a>
+          <a href="mechatronics.html">Mechatronics</a>
+          <a href="architecture.html">Architecture</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Contact Info</h4>
+        <div class="footer-contact-list">
+          <div class="footer-contact-item"><span>Hlaing Tharyar Township, Yangon, Myanmar</span>
+          </div>
+          <div class="footer-contact-item"><span>Official contact email will be updated soon</span>
+          </div>
+          <div class="footer-contact-item"><span>Official contact phone will be updated soon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <div>© 2026 West Yangon Technological University. All rights reserved.</div>
+      <div class="social-links">
+        <span style="font-size:0.875rem;">WYTU Official</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../data/departments.js"></script>
+  <script src="../data/events.js"></script>
+  <script src="../js/admin.js"></script>
+  <script src="../js/events.js"></script>
+  <script src="../js/departments.js"></script>
+  <script src="../js/navigation.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>

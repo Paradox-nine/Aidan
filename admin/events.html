@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Events - WYTU Admin</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- Admin Top Header -->
+  <header class="admin-header">
+    <div class="admin-brand">
+      <img src="../images/logo.png" alt="WYTU Logo">
+      <span>WYTU Admin Management</span>
+    </div>
+    <div class="admin-user-menu">
+      <div class="admin-user-info">
+        <span> Logged in as:</span>
+        <span class="admin-user-name">Administrator</span>
+      </div>
+      <button type="button" class="btn-admin-logout">Logout</button>
+    </div>
+  </header>
+
+  <div class="admin-wrapper">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+      <a href="index.html" class="admin-nav-item"> Dashboard</a>
+      <a href="events.html" class="admin-nav-item active"> Manage Events</a>
+      <a href="create-event.html" class="admin-nav-item"> Create Event</a>
+      <a href="../index.html" class="admin-nav-item" target="_blank"> View Website &rarr;</a>
+    </aside>
+
+    <!-- Admin Main Content -->
+    <main class="admin-main">
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Manage Event Announcements</h1>
+          <p class="admin-page-subtitle">Publish, draft, edit, or delete university event announcements.</p>
+        </div>
+        <a href="create-event.html" class="btn btn-primary">+ Create Event</a>
+      </div>
+
+      <!-- Filter Bar -->
+      <div style="background-color: var(--white); padding: 1.25rem; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <label for="admin-status-filter" style="font-weight: 700; color: var(--navy); font-size: 0.9rem;">Filter by Status:</label>
+          <select id="admin-status-filter" class="admin-select" style="width: auto; padding: 0.4rem 1rem;">
+            <option value="all">All Events</option>
+            <option value="published">Published Only</option>
+            <option value="draft">Drafts Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Events Data Table -->
+      <div class="admin-card">
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 80px;">Thumbnail</th>
+                <th>Title & Location</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th style="width: 200px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-events-table-body">
+              <!-- Rendered by js/admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirmation Delete Modal Dialog -->
+  <div id="delete-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon"></div>
+      <h3 class="modal-title">Delete Event Announcement?</h3>
+      <p class="modal-desc">Are you sure you want to delete this event? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button type="button" id="cancel-delete-btn" class="btn btn-outline">Cancel</button>
+        <button type="button" id="confirm-delete-btn" class="btn btn-primary" style="background-color: var(--danger); border-color: var(--danger);">Delete Event</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../data/events.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>
