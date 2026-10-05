@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Header from './Header';
-import { Lock, LogOut, Upload, PlusCircle, CheckCircle2, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { Lock, LogOut, Upload, PlusCircle, CheckCircle2, AlertCircle, Image as ImageIcon, Shield } from 'lucide-react';
 
 export default function AdminRoute({ onNavigate, currentPath }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -31,12 +31,18 @@ export default function AdminRoute({ onNavigate, currentPath }) {
   // Authentication Handler
   const handleLogin = (e) => {
     e.preventDefault();
-    if (usernameInput === 'KyiKyi2026' && passwordInput === 'Ze9112004Ze') {
+    const validUsernames = ['zinmyoenaing873@gmail.com', 'kyikyi2026', 'admin'];
+    const validPasswords = ['Ze9112004Ze!', 'Ze9112004Ze'];
+
+    if (
+      validUsernames.includes(usernameInput.trim().toLowerCase()) &&
+      validPasswords.includes(passwordInput.trim())
+    ) {
       setIsAuthenticated(true);
       sessionStorage.setItem('admin_authenticated', 'true');
       setLoginError('');
     } else {
-      setLoginError('Invalid Username or Password. Please check and try again.');
+      setLoginError('Invalid Admin Email/Username or Password. Please check and try again.');
     }
   };
 
@@ -59,7 +65,6 @@ export default function AdminRoute({ onNavigate, currentPath }) {
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // Lightweight image compression using HTML5 Canvas
         const canvas = document.createElement('canvas');
         const MAX_WIDTH = 1000;
         const MAX_HEIGHT = 1000;
@@ -84,7 +89,6 @@ export default function AdminRoute({ onNavigate, currentPath }) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Convert canvas output to JPEG Blob with 0.82 quality for lightweight storage
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -122,7 +126,6 @@ export default function AdminRoute({ onNavigate, currentPath }) {
     try {
       let uploadedImageUrl = '';
 
-      // Upload file to Supabase Storage Bucket 'uploads' if file is provided
       if (selectedFile) {
         const fileExt = selectedFile.name.split('.').pop() || 'jpg';
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
@@ -141,7 +144,6 @@ export default function AdminRoute({ onNavigate, currentPath }) {
           throw new Error(`Image upload failed: ${uploadError.message}`);
         }
 
-        // Retrieve Public URL
         const { data: publicUrlData } = supabase.storage
           .from('uploads')
           .getPublicUrl(filePath);
@@ -149,12 +151,10 @@ export default function AdminRoute({ onNavigate, currentPath }) {
         uploadedImageUrl = publicUrlData.publicUrl;
       }
 
-      // Convert comma separated colors to Array
       const colorsArray = colorsInput
         ? colorsInput.split(',').map((c) => c.trim()).filter(Boolean)
         : [];
 
-      // Payload object
       const newProductData = {
         name: name.trim(),
         price: price ? parseFloat(price) : null,
@@ -169,7 +169,6 @@ export default function AdminRoute({ onNavigate, currentPath }) {
         image_url: uploadedImageUrl || null,
       };
 
-      // Try inserting into 'smart-catalog' table first, fallback to 'products'
       let insertErr = null;
       const res1 = await supabase.from('smart-catalog').insert([newProductData]);
 
@@ -190,7 +189,6 @@ export default function AdminRoute({ onNavigate, currentPath }) {
         text: 'Product successfully added to the catalog!',
       });
 
-      // Reset Form Fields
       setName('');
       setPrice('');
       setCurrency('$');
@@ -216,44 +214,44 @@ export default function AdminRoute({ onNavigate, currentPath }) {
   // Login UI when unauthenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+      <div className="min-h-screen bg-slate-950 flex flex-col font-sans text-slate-100">
         <Header onNavigate={onNavigate} currentPath={currentPath} />
-        <main className="flex-1 max-w-md w-full mx-auto p-4 flex items-center justify-center my-12">
-          <div className="bg-white rounded-3xl p-8 border-4 border-blue-900 shadow-2xl w-full space-y-6">
+        <main className="flex-1 max-w-md w-full mx-auto px-4 py-8 sm:py-12 flex items-center justify-center">
+          <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl w-full space-y-6">
             <div className="text-center space-y-2">
-              <div className="bg-blue-900 text-yellow-300 p-4 rounded-2xl inline-block shadow-md">
-                <Lock className="w-10 h-10" />
+              <div className="bg-blue-600/20 text-blue-400 p-3.5 rounded-2xl inline-block border border-blue-500/40">
+                <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" />
               </div>
-              <h2 className="text-3xl font-black text-slate-900">Admin Login</h2>
-              <p className="text-lg font-bold text-slate-600">
-                Please enter credentials to manage catalog items.
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Admin Login</h2>
+              <p className="text-xs sm:text-sm text-slate-400">
+                Enter admin email &amp; password to manage catalog items.
               </p>
             </div>
 
             {loginError && (
-              <div className="bg-rose-100 border-2 border-rose-400 text-rose-900 p-4 rounded-xl flex items-center gap-3 font-bold text-base">
-                <AlertCircle className="w-6 h-6 flex-shrink-0 text-rose-700" />
+              <div className="bg-rose-950/80 border border-rose-800 text-rose-200 p-3.5 rounded-xl flex items-center gap-2.5 text-xs sm:text-sm font-semibold">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400" />
                 <span>{loginError}</span>
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
               <div>
-                <label className="block text-lg font-black text-slate-900 mb-2">
-                  Admin Username
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
+                  Admin Email / Username
                 </label>
                 <input
                   type="text"
                   required
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="Enter username"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  placeholder="e.g. zinmyoenaing873@gmail.com"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <label className="block text-lg font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   Password
                 </label>
                 <input
@@ -262,15 +260,15 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-blue-900 hover:bg-blue-800 text-yellow-300 font-black text-2xl py-4 rounded-xl border-2 border-blue-950 shadow-lg cursor-pointer transition focus:ring-4 focus:ring-yellow-400"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-base sm:text-lg py-3.5 rounded-xl border border-blue-400 shadow-lg cursor-pointer transition active:scale-95"
               >
-                Log In to Admin
+                Log In to Admin Portal
               </button>
             </form>
           </div>
@@ -281,53 +279,53 @@ export default function AdminRoute({ onNavigate, currentPath }) {
 
   // Authenticated Admin Dashboard UI
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-950 flex flex-col font-sans text-slate-100">
       <Header isAdminLoggedIn={true} onLogoutAdmin={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Admin Welcome Bar */}
-        <div className="bg-blue-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-yellow-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-6">
+        {/* Admin Welcome Header */}
+        <div className="bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <span className="bg-yellow-400 text-blue-950 font-black px-4 py-1 rounded-full text-base uppercase tracking-wider">
-              Admin Mode
+            <span className="bg-blue-600/20 text-blue-400 font-mono text-xs font-bold px-3 py-1 rounded-full border border-blue-500/40 uppercase tracking-wider">
+              Admin Dashboard
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mt-2">
+            <h2 className="text-xl sm:text-3xl font-extrabold text-white mt-2">
               Add New Catalog Item
             </h2>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-red-700 hover:bg-red-600 text-white font-black text-lg px-6 py-3 rounded-2xl border-2 border-red-900 flex items-center gap-2 cursor-pointer shadow-md"
+            className="bg-rose-950/80 hover:bg-rose-900 text-rose-200 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-rose-800 flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
           >
-            <LogOut className="w-5 h-5" /> Logout Admin
+            <LogOut className="w-4 h-4" /> Logout Admin
           </button>
         </div>
 
         {/* Status Alert Banner */}
         {statusMessage && (
           <div
-            className={`p-6 rounded-2xl border-4 flex items-center gap-4 text-xl font-black shadow-md ${
+            className={`p-4 sm:p-5 rounded-2xl border flex items-center gap-3 text-sm sm:text-base font-bold shadow-md ${
               statusMessage.type === 'success'
-                ? 'bg-emerald-100 border-emerald-600 text-emerald-950'
-                : 'bg-rose-100 border-rose-600 text-rose-950'
+                ? 'bg-emerald-950/80 border-emerald-800 text-emerald-200'
+                : 'bg-rose-950/80 border-rose-800 text-rose-200'
             }`}
           >
             {statusMessage.type === 'success' ? (
-              <CheckCircle2 className="w-8 h-8 text-emerald-700 flex-shrink-0" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0" />
             ) : (
-              <AlertCircle className="w-8 h-8 text-rose-700 flex-shrink-0" />
+              <AlertCircle className="w-6 h-6 text-rose-400 flex-shrink-0" />
             )}
             <span>{statusMessage.text}</span>
           </div>
         )}
 
-        {/* Product Addition Form */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border-4 border-slate-300 shadow-xl space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Product Form */}
+        <div className="bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Product Name */}
             <div>
-              <label className="block text-xl font-black text-slate-900 mb-2">
-                1. Product Name <span className="text-red-600">*</span>
+              <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
+                1. Product Name <span className="text-rose-400">*</span>
               </label>
               <input
                 type="text"
@@ -335,14 +333,14 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Ergonomic Reader Glasses"
-                className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
               />
             </div>
 
-            {/* Price & Currency Grid */}
+            {/* Price & Currency */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xl font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   2. Price
                 </label>
                 <input
@@ -351,18 +349,18 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="e.g. 29.99"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xl font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   3. Currency Symbol
                 </label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50 cursor-pointer"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white cursor-pointer"
                 >
                   <option value="$">$ (USD)</option>
                   <option value="€">€ (EUR)</option>
@@ -373,31 +371,31 @@ export default function AdminRoute({ onNavigate, currentPath }) {
               </div>
             </div>
 
-            {/* In Stock Checkbox */}
-            <div className="bg-amber-50 p-4 rounded-2xl border-2 border-amber-300">
-              <label className="flex items-center gap-4 cursor-pointer select-none">
+            {/* Stock Toggle */}
+            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={inStock}
                   onChange={(e) => setInStock(e.target.checked)}
-                  className="w-8 h-8 text-emerald-700 border-2 border-slate-600 rounded focus:ring-yellow-400 cursor-pointer"
+                  className="w-5 h-5 text-blue-600 border-slate-600 rounded focus:ring-blue-500 cursor-pointer"
                 />
-                <span className="text-2xl font-extrabold text-slate-900">
+                <span className="text-sm font-bold text-slate-200">
                   Product is In Stock
                 </span>
               </label>
             </div>
 
-            {/* Lightweight Image Uploader */}
-            <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-300 space-y-4">
-              <label className="block text-xl font-black text-slate-900">
-                4. Lightweight Image Uploader (Supabase Storage 'uploads')
+            {/* Image Uploader */}
+            <div className="bg-slate-950 p-4 sm:p-5 rounded-xl border border-slate-800 space-y-3">
+              <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400">
+                4. Image Upload (Supabase Storage 'uploads')
               </label>
 
-              <div className="flex flex-col sm:flex-row items-center gap-6">
-                <label className="bg-blue-900 hover:bg-blue-800 text-yellow-300 font-extrabold text-xl px-6 py-4 rounded-2xl border-2 border-blue-950 flex items-center gap-3 cursor-pointer shadow-md focus-within:ring-4 focus-within:ring-yellow-400">
-                  <Upload className="w-6 h-6" />
-                  Choose Image File
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <label className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm px-4 py-3 rounded-xl border border-blue-400 flex items-center gap-2 cursor-pointer transition active:scale-95">
+                  <Upload className="w-4 h-4" />
+                  Choose File
                   <input
                     type="file"
                     accept="image/*"
@@ -407,31 +405,31 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                 </label>
 
                 {previewUrl ? (
-                  <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border-2 border-slate-300">
+                  <div className="flex items-center gap-3 bg-slate-900 p-2.5 rounded-xl border border-slate-700">
                     <img
                       src={previewUrl}
                       alt="Selected preview"
-                      className="w-20 h-20 object-cover rounded-xl border border-slate-300"
+                      className="w-14 h-14 object-cover rounded-lg border border-slate-700"
                     />
                     <div>
-                      <p className="font-extrabold text-slate-900 text-base">
-                        Image Compressed &amp; Ready
+                      <p className="font-bold text-slate-200 text-xs">
+                        Image Compressed
                       </p>
-                      <p className="text-sm font-bold text-emerald-700">Lightweight preview</p>
+                      <p className="text-[10px] text-emerald-400 font-mono">Ready to upload</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-slate-500 font-bold text-lg">
-                    <ImageIcon className="w-6 h-6" /> No image selected
+                  <div className="flex items-center gap-1.5 text-slate-500 font-medium text-xs">
+                    <ImageIcon className="w-4 h-4" /> No file selected
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Category & Brand Grid */}
+            {/* Category & Brand */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xl font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   5. Category
                 </label>
                 <input
@@ -439,12 +437,12 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   placeholder="e.g. Electronics, Health"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xl font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   6. Brand
                 </label>
                 <input
@@ -452,15 +450,15 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
                   placeholder="e.g. SmartTech"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
             </div>
 
-            {/* Tag & Colors Grid */}
+            {/* Tag & Colors */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xl font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   7. Tag
                 </label>
                 <input
@@ -468,12 +466,12 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                   value={tag}
                   onChange={(e) => setTag(e.target.value)}
                   placeholder="e.g. Best Seller"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xl font-black text-slate-900 mb-2">
+                <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                   8. Colors (separated by comma)
                 </label>
                 <input
@@ -481,22 +479,22 @@ export default function AdminRoute({ onNavigate, currentPath }) {
                   value={colorsInput}
                   onChange={(e) => setColorsInput(e.target.value)}
                   placeholder="e.g. Red, Blue, Black"
-                  className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                  className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
                 />
               </div>
             </div>
 
-            {/* Note / Description */}
+            {/* Description / Note */}
             <div>
-              <label className="block text-xl font-black text-slate-900 mb-2">
+              <label className="block text-xs sm:text-sm font-mono font-bold text-blue-400 mb-1.5">
                 9. Note / Description
               </label>
               <textarea
                 rows="3"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Enter helpful product description or special instructions..."
-                className="w-full text-xl font-bold p-4 rounded-xl border-2 border-slate-400 focus:border-blue-800 focus:ring-4 focus:ring-yellow-300 outline-none bg-slate-50"
+                placeholder="Enter helpful description or note..."
+                className="w-full text-sm sm:text-base font-medium p-3 sm:p-3.5 rounded-xl border border-slate-700 focus:border-blue-500 outline-none bg-slate-950 text-white placeholder-slate-500"
               />
             </div>
 
@@ -504,16 +502,16 @@ export default function AdminRoute({ onNavigate, currentPath }) {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-400 text-white font-black text-2xl py-5 rounded-2xl border-2 border-emerald-900 shadow-xl flex items-center justify-center gap-3 transition cursor-pointer focus:ring-4 focus:ring-yellow-400"
+              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white font-bold text-base sm:text-lg py-4 rounded-xl border border-emerald-400 shadow-xl flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
             >
               {submitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
-                  Uploading &amp; Saving Product...
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                  Saving Product...
                 </>
               ) : (
                 <>
-                  <PlusCircle className="w-8 h-8" /> Save Product To Catalog
+                  <PlusCircle className="w-5 h-5" /> Save Product To Catalog
                 </>
               )}
             </button>
