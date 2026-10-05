@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Lock, Unlock } from 'lucide-react';
+import { ShoppingBag, Lock, Unlock, Bot, Store } from 'lucide-react';
 
 export default function Header({ isAdminLoggedIn, onLogoutAdmin }) {
   const currentPath = window.location.pathname;
@@ -16,12 +16,30 @@ export default function Header({ isAdminLoggedIn, onLogoutAdmin }) {
               Smart Cataloged
             </h1>
             <p className="text-yellow-300 text-sm font-semibold tracking-wide">
-              Easy & Clear Product Store
+              Easy & Clear Product Store &amp; CEIT Portal
             </p>
           </div>
         </a>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {currentPath !== '/ai' && (
+            <a
+              href="/ai"
+              className="bg-yellow-400 hover:bg-yellow-300 text-blue-950 font-black px-4 py-3 rounded-xl text-base shadow-md transition flex items-center gap-2 border-2 border-yellow-500 focus:ring-4 focus:ring-yellow-300"
+            >
+              <Bot className="w-5 h-5" /> CEIT AI Assistant
+            </a>
+          )}
+
+          {currentPath === '/ai' && (
+            <a
+              href="/"
+              className="bg-blue-800 hover:bg-blue-700 text-yellow-300 font-bold px-4 py-3 rounded-xl text-base shadow-sm border border-blue-600 transition flex items-center gap-2 focus:ring-4 focus:ring-yellow-300"
+            >
+              <Store className="w-5 h-5" /> Store Catalog
+            </a>
+          )}
+
           {currentPath === '/admin' ? (
             <a
               href="/"
