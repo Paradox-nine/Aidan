@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import Header from './Header';
 import { Lock, LogOut, Upload, PlusCircle, CheckCircle2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 
-export default function AdminRoute() {
+export default function AdminRoute({ onNavigate, currentPath }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('admin_authenticated') === 'true';
   });
@@ -217,7 +217,7 @@ export default function AdminRoute() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-        <Header />
+        <Header onNavigate={onNavigate} currentPath={currentPath} />
         <main className="flex-1 max-w-md w-full mx-auto p-4 flex items-center justify-center my-12">
           <div className="bg-white rounded-3xl p-8 border-4 border-blue-900 shadow-2xl w-full space-y-6">
             <div className="text-center space-y-2">
@@ -282,7 +282,7 @@ export default function AdminRoute() {
   // Authenticated Admin Dashboard UI
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
-      <Header isAdminLoggedIn={true} onLogoutAdmin={handleLogout} />
+      <Header isAdminLoggedIn={true} onLogoutAdmin={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Admin Welcome Bar */}

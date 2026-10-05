@@ -15,7 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export default function CeitAiAssistant() {
+export default function CeitAiAssistant({ onNavigate, currentPath }) {
   const [messages, setMessages] = useState([
     {
       id: 'welcome-msg',
@@ -102,7 +102,7 @@ export default function CeitAiAssistant() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-900">
-      <Header />
+      <Header onNavigate={onNavigate} currentPath={currentPath} />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Title Banner */}
