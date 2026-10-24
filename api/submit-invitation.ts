@@ -138,12 +138,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  // 7. Validate Server Environment Variables
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+  // 7. Validate Server Environment Variables with fallbacks/aliases
+  const gmailUser = process.env.GMAIL_USER || process.env.GMAIL_EMAIL || RECIPIENT_EMAIL;
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASSWORD || process.env.GMAIL_PASS;
 
-  if (!gmailUser || !gmailAppPassword) {
-    console.error('Server Configuration Error: GMAIL_USER or GMAIL_APP_PASSWORD is missing.');
+  if (!gmailAppPassword) {
+    console.error('Server Configuration Error: GMAIL_APP_PASSWORD (or GMAIL_PASSWORD) is not configured in Vercel environment variables.');
     return res.status(500).json({
       success: false,
       message: 'Server email configuration is missing. Please contact the administrator.',
@@ -207,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: unknown) {
     const error = err as Error;
-    console.error('Error handling invitation submission:', error?.message || error);
+    console.error('Error handling invitation submission during email send:', error?.message || error);
     return res.status(500).json({
       success: false,
       message: 'Failed to process submission or send email. Please try again later.',

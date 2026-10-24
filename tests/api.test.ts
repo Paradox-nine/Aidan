@@ -184,9 +184,11 @@ describe('API Endpoint: POST /api/submit-invitation', () => {
     expect(nodemailer.createTransport).not.toHaveBeenCalled();
   });
 
-  it('returns 500 error when GMAIL env vars are missing', async () => {
+  it('returns 500 error when GMAIL_APP_PASSWORD env var is missing', async () => {
     delete process.env.GMAIL_USER;
     delete process.env.GMAIL_APP_PASSWORD;
+    delete process.env.GMAIL_PASSWORD;
+    delete process.env.GMAIL_PASS;
 
     const { req, res } = createMockReqRes('POST', {
       fullName: 'Jane Doe',
@@ -199,6 +201,29 @@ describe('API Endpoint: POST /api/submit-invitation', () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.getResponseData().message).toMatch(/Server email configuration is missing/i);
+  });
+
+  it('supports GMAIL_PASSWORD alias when GMAIL_APP_PASSWORD is not set', async () => {
+    delete process.env.GMAIL_APP_PASSWORD;
+    process.env.GMAIL_PASSWORD = 'alias-app-password';
+
+    const { req, res } = createMockReqRes('POST', {
+      fullName: 'Jane Doe',
+      email: 'jane@example.com',
+      attendance: 'Attending',
+      guestCount: 0,
+      consent: true,
+    });
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      service: 'gmail',
+      auth: {
+        user: 'zinmyoenaing873@gmail.com',
+        pass: 'alias-app-password',
+      },
+    });
   });
 
   it('successfully generates PDF and sends email on valid payload', async () => {
